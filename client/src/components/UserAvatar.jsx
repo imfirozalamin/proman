@@ -21,12 +21,26 @@ const UserAvatar = () => {
 
   const logoutHandler = async () => {
     try {
-      await logoutUser().unwrap();
+      // First clear the Redux state and localStorage
       dispatch(logout());
-
+      localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      
+      // Then navigate to login page
       navigate("/log-in");
+      
+      // Finally, call the logout API (don't wait for it)
+      logoutUser().unwrap()
+        .then(() => {
+          toast.success("Logged out successfully");
+        })
+        .catch(() => {
+          // Ignore API errors since we've already logged out locally
+        });
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      // This catch is for any errors in the dispatch or navigation
+      console.error('Logout error:', error);
+      toast.error("Something went wrong during logout");
     }
   };
 

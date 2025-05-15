@@ -7,6 +7,27 @@ import { useRegisterMutation } from "../redux/slices/api/authApiSlice";
 import { setCredentials } from "../redux/slices/authSlice";
 import { useEffect } from "react";
 
+const ROLES = [
+  "Developer",
+  "Designer",
+  "Project Manager",
+  "QA Engineer",
+  "DevOps Engineer",
+  "Product Manager",
+  "Other"
+];
+
+const TITLES = [
+  "Junior",
+  "Mid-Level",
+  "Senior",
+  "Lead",
+  "Principal",
+  "Manager",
+  "Director",
+  "Other"
+];
+
 const SignUp = () => {
   const { user } = useSelector((state) => state.auth);
   const {
@@ -24,10 +45,12 @@ const SignUp = () => {
     try {
       // Prepare the data to match your backend expectations
       const userData = {
-        username: data.name, // or data.username if you have a username field
+        name: data.name,
         email: data.email,
         password: data.password,
-        // Add any other required fields for registration
+        role: data.role,
+        title: `${data.title} ${data.role}`,
+        isAdmin: false // Default to false for security
       };
 
       const res = await registerUser(userData).unwrap();
@@ -84,8 +107,50 @@ const SignUp = () => {
                   message: "Invalid email address",
                 },
               })}
-              error={errors.email ? errors.name.message : ""}
+              error={errors.email ? errors.email.message : ""}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Title Level
+                </label>
+                <select
+                  {...register("title", { required: "Title is required!" })}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option value="">Select Title</option>
+                  {TITLES.map((title) => (
+                    <option key={title} value={title}>
+                      {title}
+                    </option>
+                  ))}
+                </select>
+                {errors.title && (
+                  <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Role
+                </label>
+                <select
+                  {...register("role", { required: "Role is required!" })}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option value="">Select Role</option>
+                  {ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+                {errors.role && (
+                  <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
+                )}
+              </div>
+            </div>
 
             <Textbox
               placeholder="password"
@@ -136,7 +201,7 @@ const SignUp = () => {
         <div className="mt-6 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             Already have an account?{" "}
-            <a href="/login" className="text-red-600 hover:underline">
+            <a href="/log-in" className="text-red-600 hover:underline">
               Sign in
             </a>
           </p>

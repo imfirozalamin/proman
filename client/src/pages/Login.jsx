@@ -23,7 +23,7 @@ const Login = () => {
     try {
       const res = await login(data).unwrap();
       dispatch(setCredentials(res));
-      localStorage.setItem("jwtoken", res.token);
+      // localStorage.setItem("jwtoken", res.token);
       navigate("/");
     } catch (err) {
       toast.error(err?.data?.message || err.error);

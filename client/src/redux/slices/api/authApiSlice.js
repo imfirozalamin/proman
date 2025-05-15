@@ -1,5 +1,6 @@
 import { USERS_URL } from "../../../utils/contants";
 import { apiSlice } from "../apiSlice";
+import { logout as logoutAction } from "../authSlice";
 
 export const authApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -44,9 +45,23 @@ export const authApiSlice = apiSlice.injectEndpoints({
         url: `${USERS_URL}/logout`,
         method: "POST",
       }),
-      // Remove token from localStorage on logout
-      onQueryStarted: async () => {
+      // Clear all auth data on logout
+      onQueryStarted: async (_, { dispatch }) => {
+        try {
+          // Remove token and user info from localStorage
+          localStorage.removeItem('token');
+          localStorage.removeItem('userInfo');
+          // Dispatch logout action to clear Redux state
+          dispatch(logoutAction());
+        } catch (err) {
+          console.error('Error during logout:', err);
+        }
+      },
+      // Even if the API call fails, we still want to clear local data
+      onError: (_, __, { dispatch }) => {
         localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        dispatch(logoutAction());
       },
     }),
   }),

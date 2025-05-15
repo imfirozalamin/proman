@@ -83,9 +83,21 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 // POST -  Logout user
-const logoutUser = (req, res) => {
-  res.status(200).json({ message: "Logged out successfully" });
-};
+const logoutUser = asyncHandler(async (req, res) => {
+  try {
+    // No need to clear cookies since we're using localStorage
+    // Just send a successful response
+    res.status(200).json({ 
+      status: true,
+      message: "Logged out successfully" 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: false,
+      message: "Error during logout" 
+    });
+  }
+});
 
 // @GET -   Get user profile
 // const getUserProfile = asyncHandler(async (req, res) => {
