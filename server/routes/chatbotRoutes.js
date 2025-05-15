@@ -4,6 +4,7 @@ import { protectRoute } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", chatWithDeepSeek);
+// Protected route
+router.post("/", protectRoute, chatWithDeepSeek);
 
 export default router;

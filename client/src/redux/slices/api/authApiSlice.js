@@ -8,23 +8,46 @@ export const authApiSlice = apiSlice.injectEndpoints({
         url: `${USERS_URL}/login`,
         method: "POST",
         body: data,
-        credentials: "include",
       }),
+      // Store token in localStorage after successful login
+      onQueryStarted: async (_, { queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.token) {
+            localStorage.setItem('token', data.token);
+          }
+        } catch (err) {
+          console.error('Error storing token:', err);
+        }
+      },
     }),
     register: builder.mutation({
       query: (data) => ({
         url: `${USERS_URL}/register`,
         method: "POST",
         body: data,
-        credentials: "include",
       }),
+      // Store token in localStorage after successful registration
+      onQueryStarted: async (_, { queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.token) {
+            localStorage.setItem('token', data.token);
+          }
+        } catch (err) {
+          console.error('Error storing token:', err);
+        }
+      },
     }),
     logout: builder.mutation({
       query: () => ({
         url: `${USERS_URL}/logout`,
         method: "POST",
-        credentials: "include",
       }),
+      // Remove token from localStorage on logout
+      onQueryStarted: async () => {
+        localStorage.removeItem('token');
+      },
     }),
   }),
 });

@@ -1,4 +1,5 @@
 import express from "express";
+import { protectRoute } from "../middleware/authMiddleware.js";
 import {
   activateUserProfile,
   changeUserPassword,
@@ -15,21 +16,23 @@ import {
 
 const router = express.Router();
 
+// Public routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.post("/logout", logoutUser);
+router.post("/logout", protectRoute, logoutUser);
 
-router.get("/get-team", getTeamList);
-router.get("/notifications", getNotificationsList);
-router.get("/get-status", getUserTaskStatus);
+router.get("/get-team", protectRoute, getTeamList);
+router.get("/notifications", protectRoute, getNotificationsList);
+router.get("/get-status", protectRoute, getUserTaskStatus);
 
-router.put("/profile", updateUserProfile);
-router.put("/read-noti", markNotificationRead);
-router.put("/change-password",  changeUserPassword);
+router.put("/profile", protectRoute, updateUserProfile);
+router.put("/read-noti", protectRoute, markNotificationRead);
+router.put("/change-password", protectRoute, changeUserPassword);
+
 //   FOR ADMIN ONLY - ADMIN ROUTES
 router
   .route("/:id")
-  .put( activateUserProfile)
-  .delete( deleteUserProfile);
+  .put(protectRoute, activateUserProfile)
+  .delete(protectRoute, deleteUserProfile);
 
 export default router;

@@ -1,7 +1,14 @@
 import asyncHandler from "express-async-handler";
+import jwt from "jsonwebtoken";
 import Notice from "../models/notis.js";
 import User from "../models/userModel.js";
-import createJWT from "../utils/index.js";
+
+// Generate JWT Token
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: '30d',
+  });
+};
 
 // POST request - login user
 const loginUser = asyncHandler(async (req, res) => {
@@ -25,11 +32,13 @@ const loginUser = asyncHandler(async (req, res) => {
   const isMatch = await user.matchPassword(password);
 
   if (user && isMatch) {
-    createJWT(res, user._id);
-
+    const token = generateToken(user._id);
     user.password = undefined;
 
-    res.status(200).json(user);
+    res.status(200).json({
+      ...user.toJSON(),
+      token
+    });
   } else {
     return res
       .status(401)
@@ -59,11 +68,13 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    isAdmin ? createJWT(res, user._id) : null;
-
+    const token = isAdmin ? generateToken(user._id) : null;
     user.password = undefined;
 
-    res.status(201).json(user);
+    res.status(201).json({
+      ...user.toJSON(),
+      token
+    });
   } else {
     return res
       .status(400)
@@ -71,12 +82,8 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// POST -  Logout user / clear cookie
+// POST -  Logout user
 const logoutUser = (req, res) => {
-  res.cookie("token", "", {
-    httpOnly: true,
-    expires: new Date(0),
-  });
   res.status(200).json({ message: "Logged out successfully" });
 };
 
@@ -119,7 +126,7 @@ const getTeamList = asyncHandler(async (req, res) => {
 
 // @GET  - get user notifications
 const getNotificationsList = asyncHandler(async (req, res) => {
-  const { userId } = req.body;
+  const { userId } = req.user;
 
   const notice = await Notice.find({
     team: userId,

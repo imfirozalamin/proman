@@ -1,4 +1,5 @@
 import express from "express";
+import { protectRoute } from "../middleware/authMiddleware.js";
 import {
   createSubTask,
   createTask,
@@ -16,26 +17,28 @@ import {
 
 const router = express.Router();
 
-router.post("/create", createTask);
-router.post("/duplicate/:id", duplicateTask);
-router.post("/activity/:id", postTaskActivity);
+// All routes are protected
+router.post("/create", protectRoute, createTask);
+router.post("/duplicate/:id", protectRoute, duplicateTask);
+router.post("/activity/:id", protectRoute, postTaskActivity);
 
-router.get("/dashboard", dashboardStatistics);
-router.get("/", getTasks);
-router.get("/:id", getTask);
+router.get("/dashboard", protectRoute, dashboardStatistics);
+router.get("/", protectRoute, getTasks);
+router.get("/:id", protectRoute, getTask);
 
-router.put("/create-subtask/:id", createSubTask);
-router.put("/update/:id", updateTask);
-router.put("/change-stage/:id", updateTaskStage);
+router.put("/create-subtask/:id", protectRoute, createSubTask);
+router.put("/update/:id", protectRoute, updateTask);
+router.put("/change-stage/:id", protectRoute, updateTaskStage);
 router.put(
   "/change-status/:taskId/:subTaskId",
+  protectRoute,
   updateSubTaskStage
 );
-router.put("/:id", trashTask);
+router.put("/:id", protectRoute, trashTask);
 
 router.delete(
   "/delete-restore/:id?",
-
+  protectRoute,
   deleteRestoreTask
 );
 
