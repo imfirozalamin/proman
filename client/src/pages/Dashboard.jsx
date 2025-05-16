@@ -72,7 +72,7 @@ const Dashboard = () => {
     },
     {
       _id: "3",
-      label: "TASK IN PROJECTS ",
+      label: "IN PROGRESS ",
       total: totals["in progress"] || 0,
       icon: <LuClipboardEdit />,
       bg: "bg-[#f59e0b]",
@@ -242,7 +242,7 @@ const TaskTable = ({ tasks }) => {
   const TableHeader = () => (
     <thead className="border-b border-gray-300 dark:border-gray-600">
       <tr className="text-black dark:text-white text-left">
-        <th className="py-2">Task Title</th>
+        <th className="py-2">Project Title</th>
         <th className="py-2">Priority</th>
         <th className="py-2">Team</th>
         <th className="py-2 hidden md:block">Created At</th>
