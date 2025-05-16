@@ -36,10 +36,6 @@ router.put(
 );
 router.put("/:id", protectRoute, trashTask);
 
-router.delete(
-  "/delete-restore/:id?",
-  protectRoute,
-  deleteRestoreTask
-);
+router.delete("/delete-restore/:id?", protectRoute, deleteRestoreTask);
 
 export default router;

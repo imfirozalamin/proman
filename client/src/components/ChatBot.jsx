@@ -50,6 +50,17 @@ const ChatBot = ({ onClose }) => {
     scrollToBottom();
   }, [conversation]);
 
+  // Helper to parse deadline like "12 June 2025" to ISO string
+  const parseDeadlineToISO = (dateStr) => {
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date)) return null;
+      return date.toISOString();
+    } catch {
+      return null;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!message.trim() || isLoading) return;
@@ -59,6 +70,83 @@ const ChatBot = ({ onClose }) => {
     setConversation((prev) => [...prev, userMessage]);
     setMessage("");
 
+    const lowerMessage = message.toLowerCase();
+
+    // Check if user wants to create a task or project
+    if (
+      lowerMessage.includes("create a project") ||
+      lowerMessage.includes("create a task")
+    ) {
+      // Detect priority
+      let priority = "normal";
+      if (lowerMessage.includes("high priority")) priority = "high";
+      else if (lowerMessage.includes("medium priority")) priority = "medium";
+      else if (lowerMessage.includes("low priority")) priority = "low";
+
+      // Extract deadline with regex for dates like "12 June 2025"
+      const deadlineMatch = lowerMessage.match(
+        /\b\d{1,2}\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{4}\b/i
+      );
+      const deadline = deadlineMatch
+        ? parseDeadlineToISO(deadlineMatch[0])
+        : null;
+
+      // Extract title by grabbing text after "create a project" or "create a task"
+      let title = "New Task";
+      const projectIndex = lowerMessage.indexOf("create a project");
+      if (projectIndex !== -1) {
+        title = message
+          .substring(projectIndex + "create a project".length)
+          .trim();
+      } else {
+        const taskIndex = lowerMessage.indexOf("create a task");
+        if (taskIndex !== -1) {
+          title = message.substring(taskIndex + "create a task".length).trim();
+        }
+      }
+      if (!title) title = "New Task";
+
+      try {
+        const response = await fetch("/api/tasks/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({
+            title,
+            priority,
+            deadline,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to create task");
+
+        const data = await response.json();
+
+        setConversation((prev) => [
+          ...prev,
+          {
+            role: "bot",
+            content: `Task "${title}" created successfully with priority "${priority}"${
+              deadline ? ` and deadline ${deadlineMatch[0]}` : ""
+            }.`,
+          },
+        ]);
+      } catch (error) {
+        toast.error("Failed to create task");
+        console.error(error);
+        setConversation((prev) => [
+          ...prev,
+          { role: "bot", content: "Sorry, I was unable to create the task." },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // For other messages, call chatbot backend normally
     try {
       const response = await fetch("/api/chatbot", {
         method: "POST",
@@ -174,9 +262,6 @@ const ChatBot = ({ onClose }) => {
             )}
           </button>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-          ProMan may produce inaccurate information about tasks and projects.
-        </p>
       </form>
     </Transition>
   );
