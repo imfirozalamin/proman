@@ -279,9 +279,6 @@ const TaskDetail = () => {
                 </div>
 
                 <div className="space-y-4 py-6">
-                  <p className="text-gray-500 font-semibold text-sm">
-                    TASK TEAM
-                  </p>
                   <div className="space-y-3">
                     {task?.team?.map((m, index) => (
                       <div

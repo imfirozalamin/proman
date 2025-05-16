@@ -86,7 +86,6 @@ const Dashboard = () => {
     },
   ];
 
-  // Format remaining time display
   const formatRemainingTime = (deadline) => {
     const duration = moment.duration(moment(deadline).diff(moment()));
     const days = Math.floor(duration.asDays());
@@ -101,7 +100,6 @@ const Dashboard = () => {
     return `${minutes}m left`;
   };
 
-  // Get recommended projects (high priority or nearing deadline and not completed)
   const recommendedProjects = data?.last10Task
     ?.filter(
       (task) =>
@@ -117,7 +115,6 @@ const Dashboard = () => {
       );
     });
 
-  // Determine how many projects to show based on screen size and expanded state
   const getVisibleProjects = () => {
     if (isExpanded) return recommendedProjects;
     return window.innerWidth >= 768
@@ -136,7 +133,6 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Recommended Projects Section */}
         {recommendedProjects?.length > 0 && (
           <div className="w-full bg-white my-8 p-4 rounded shadow-sm">
             <div className="flex justify-between items-center mb-4">
@@ -226,64 +222,10 @@ const Dashboard = () => {
           </h4>
           <Chart data={data?.graphData} />
         </div>
-        <div className="w-full flex flex-col md:flex-row gap-4 2xl:gap-10 py-8">
+        <div className="w-full flex flex-col gap-4 2xl:gap-10 py-8">
           {data && <TaskTable tasks={data?.last10Task} />}
-          {data && user?.isAdmin && <UserTable users={data?.users} />}
         </div>
       </>
-    </div>
-  );
-};
-
-const UserTable = ({ users }) => {
-  const TableHeader = () => (
-    <thead className="border-b border-gray-300 dark:border-gray-600">
-      <tr className="text-black dark:text-white text-left">
-        <th className="py-2">Full Name</th>
-        <th className="py-2">Status</th>
-        <th className="py-2">Created At</th>
-      </tr>
-    </thead>
-  );
-
-  const TableRow = ({ user }) => (
-    <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-400/10">
-      <td className="py-2">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full text-white flex items-center justify-center text-sm bg-violet-700">
-            <span className="text-center">{getInitials(user?.name)}</span>
-          </div>
-          <div>
-            <p> {user.name}</p>
-            <span className="text-xs text-black">{user?.role}</span>
-          </div>
-        </div>
-      </td>
-
-      <td>
-        <p
-          className={clsx(
-            "w-fit px-3 py-1 rounded-full text-sm",
-            user?.isActive ? "bg-blue-200" : "bg-yellow-100"
-          )}
-        >
-          {user?.isActive ? "Active" : "Disabled"}
-        </p>
-      </td>
-      <td className="py-2 text-sm">{moment(user?.createdAt).fromNow()}</td>
-    </tr>
-  );
-
-  return (
-    <div className="w-full md:w-1/3 bg-white h-fit px-2 md:px-6 py-4 shadow-md rounded">
-      <table className="w-full mb-5">
-        <TableHeader />
-        <tbody>
-          {users?.map((user, index) => (
-            <TableRow key={index + user?._id} user={user} />
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 };
@@ -354,23 +296,21 @@ const TaskTable = ({ tasks }) => {
   );
 
   return (
-    <>
-      <div
-        className={clsx(
-          "w-full bg-white dark:bg-[#1f1f1f] px-2 md:px-4 pt-4 pb-4 shadow-md rounded",
-          user?.isAdmin ? "md:w-2/3" : ""
-        )}
-      >
-        <table className="w-full">
-          <TableHeader />
-          <tbody className="">
-            {tasks.map((task, id) => (
-              <TableRow key={task?._id + id} task={task} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+    <div
+      className={clsx(
+        "w-full bg-white dark:bg-[#1f1f1f] px-2 md:px-4 pt-4 pb-4 shadow-md rounded",
+        user?.isAdmin ? "w-full" : ""
+      )}
+    >
+      <table className="w-full">
+        <TableHeader />
+        <tbody className="">
+          {tasks.map((task, id) => (
+            <TableRow key={task?._id + id} task={task} />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
