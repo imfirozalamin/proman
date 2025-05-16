@@ -7,27 +7,6 @@ import { useRegisterMutation } from "../redux/slices/api/authApiSlice";
 import { setCredentials } from "../redux/slices/authSlice";
 import { useEffect } from "react";
 
-const ROLES = [
-  "Developer",
-  "Designer",
-  "Project Manager",
-  "QA Engineer",
-  "DevOps Engineer",
-  "Product Manager",
-  "Other"
-];
-
-const TITLES = [
-  "Junior",
-  "Mid-Level",
-  "Senior",
-  "Lead",
-  "Principal",
-  "Manager",
-  "Director",
-  "Other"
-];
-
 const SignUp = () => {
   const { user } = useSelector((state) => state.auth);
   const {
@@ -43,14 +22,13 @@ const SignUp = () => {
 
   const handleSignup = async (data) => {
     try {
-      // Prepare the data to match your backend expectations
       const userData = {
         name: data.name,
         email: data.email,
         password: data.password,
-        role: data.role,
-        title: `${data.title} ${data.role}`,
-        isAdmin: false // Default to false for security
+        title: "Administrator",
+        role: "Admin",
+        isAdmin: true,
       };
 
       const res = await registerUser(userData).unwrap();
@@ -109,48 +87,6 @@ const SignUp = () => {
               })}
               error={errors.email ? errors.email.message : ""}
             />
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Title Level
-                </label>
-                <select
-                  {...register("title", { required: "Title is required!" })}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="">Select Title</option>
-                  {TITLES.map((title) => (
-                    <option key={title} value={title}>
-                      {title}
-                    </option>
-                  ))}
-                </select>
-                {errors.title && (
-                  <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Role
-                </label>
-                <select
-                  {...register("role", { required: "Role is required!" })}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="">Select Role</option>
-                  {ROLES.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-                {errors.role && (
-                  <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
-                )}
-              </div>
-            </div>
 
             <Textbox
               placeholder="password"
