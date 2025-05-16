@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import moment from "moment";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { FaNewspaper } from "react-icons/fa";
 import { FaArrowsToDot } from "react-icons/fa6";
 import { LuClipboardEdit } from "react-icons/lu";
@@ -9,6 +9,8 @@ import {
   MdKeyboardArrowDown,
   MdKeyboardArrowUp,
   MdKeyboardDoubleArrowUp,
+  MdExpandMore,
+  MdExpandLess,
 } from "react-icons/md";
 import { Chart, Loading, UserInfo } from "../components";
 import { useGetDasboardStatsQuery } from "../redux/slices/api/taskApiSlice";
@@ -21,7 +23,7 @@ const Card = ({ label, count, bg, icon }) => {
       <div className="h-full flex flex-1 flex-col justify-between">
         <p className="text-base text-gray-600">{label}</p>
         <span className="text-2xl font-semibold">{count}</span>
-        <span className="text-sm text-gray-400"> </span> {/* Last Month */}
+        <span className="text-sm text-gray-400"> </span>
       </div>
       <div
         className={clsx(
@@ -38,6 +40,7 @@ const Card = ({ label, count, bg, icon }) => {
 const Dashboard = () => {
   const { data, isLoading, error } = useGetDasboardStatsQuery();
   const { user } = useSelector((state) => state.auth);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -83,6 +86,47 @@ const Dashboard = () => {
     },
   ];
 
+  // Format remaining time display
+  const formatRemainingTime = (deadline) => {
+    const duration = moment.duration(moment(deadline).diff(moment()));
+    const days = Math.floor(duration.asDays());
+    const hours = duration.hours();
+    const minutes = duration.minutes();
+
+    if (days > 0) {
+      return `${days}d ${hours}h left`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m left`;
+    }
+    return `${minutes}m left`;
+  };
+
+  // Get recommended projects (high priority or nearing deadline and not completed)
+  const recommendedProjects = data?.last10Task
+    ?.filter(
+      (task) =>
+        (task.priority === "high" ||
+          moment(task.deadline).diff(moment(), "days") <= 3) &&
+        task.stage !== "completed"
+    )
+    .sort((a, b) => {
+      if (a.priority === "high" && b.priority !== "high") return -1;
+      if (b.priority === "high" && a.priority !== "high") return 1;
+      return (
+        moment(a.deadline).diff(moment()) - moment(b.deadline).diff(moment())
+      );
+    });
+
+  // Determine how many projects to show based on screen size and expanded state
+  const getVisibleProjects = () => {
+    if (isExpanded) return recommendedProjects;
+    return window.innerWidth >= 768
+      ? recommendedProjects?.slice(0, 3)
+      : recommendedProjects?.slice(0, 1);
+  };
+
+  const visibleProjects = getVisibleProjects();
+
   return (
     <div className="h-full py-4">
       <>
@@ -92,6 +136,90 @@ const Dashboard = () => {
           ))}
         </div>
 
+        {/* Recommended Projects Section */}
+        {recommendedProjects?.length > 0 && (
+          <div className="w-full bg-white my-8 p-4 rounded shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-xl text-gray-500 font-bold">
+                Recommended Projects
+              </h4>
+              {recommendedProjects.length >
+                (window.innerWidth >= 768 ? 3 : 1) && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="flex items-center text-blue-500 hover:text-blue-700"
+                >
+                  {isExpanded ? (
+                    <>
+                      <MdExpandLess className="mr-1" /> Show Less
+                    </>
+                  ) : (
+                    <>
+                      <MdExpandMore className="mr-1" /> Show More
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {visibleProjects?.map((project) => (
+                <div
+                  key={project._id}
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h5 className="font-medium text-lg">{project.title}</h5>
+                    <span
+                      className={clsx(
+                        "px-2 py-1 rounded-full text-xs",
+                        PRIOTITYSTYELS[project.priority]
+                      )}
+                    >
+                      {project.priority}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    Deadline: {moment(project.deadline).format("MMM D, YYYY")}
+                    <span className="ml-2 text-red-500 font-medium">
+                      ({formatRemainingTime(project.deadline)})
+                    </span>
+                  </div>
+                  <div className="flex items-center mt-2">
+                    <div className="flex -space-x-2">
+                      {project.team.slice(0, 3).map((member, index) => (
+                        <div
+                          key={index}
+                          className={clsx(
+                            "w-8 h-8 rounded-full text-white flex items-center justify-center text-xs",
+                            BGS[index % BGS.length]
+                          )}
+                        >
+                          <UserInfo user={member} />
+                        </div>
+                      ))}
+                      {project.team.length > 3 && (
+                        <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-xs">
+                          +{project.team.length - 3}
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-auto">
+                      <span
+                        className={clsx(
+                          "px-2 py-1 rounded text-xs",
+                          TASK_TYPE[project.stage]
+                        )}
+                      >
+                        {project.stage}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="w-full bg-white my-16 p-4 rounded shadow-sm">
           <h4 className="text-xl text-gray-500 font-bold mb-2">
             Chart by Priority
@@ -99,9 +227,7 @@ const Dashboard = () => {
           <Chart data={data?.graphData} />
         </div>
         <div className="w-full flex flex-col md:flex-row gap-4 2xl:gap-10 py-8">
-          {/* RECENT AUTHORS */}
           {data && <TaskTable tasks={data?.last10Task} />}
-          {/* RECENT USERS */}
           {data && user?.isAdmin && <UserTable users={data?.users} />}
         </div>
       </>
@@ -112,7 +238,7 @@ const Dashboard = () => {
 const UserTable = ({ users }) => {
   const TableHeader = () => (
     <thead className="border-b border-gray-300 dark:border-gray-600">
-      <tr className="text-black dark:text-white  text-left">
+      <tr className="text-black dark:text-white text-left">
         <th className="py-2">Full Name</th>
         <th className="py-2">Status</th>
         <th className="py-2">Created At</th>
@@ -173,7 +299,7 @@ const TaskTable = ({ tasks }) => {
 
   const TableHeader = () => (
     <thead className="border-b border-gray-300 dark:border-gray-600">
-      <tr className="text-black dark:text-white  text-left">
+      <tr className="text-black dark:text-white text-left">
         <th className="py-2">Task Title</th>
         <th className="py-2">Priority</th>
         <th className="py-2">Team</th>
@@ -235,7 +361,7 @@ const TaskTable = ({ tasks }) => {
           user?.isAdmin ? "md:w-2/3" : ""
         )}
       >
-        <table className="w-full ">
+        <table className="w-full">
           <TableHeader />
           <tbody className="">
             {tasks.map((task, id) => (
