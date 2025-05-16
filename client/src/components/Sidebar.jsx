@@ -39,11 +39,11 @@ const linkData = [
     link: "todo/todo",
     icon: <MdOutlinePendingActions />,
   },
-  {
-    label: "Team",
-    link: "team",
-    icon: <FaUsers />,
-  },
+  // {
+  //   label: "Team",
+  //   link: "team",
+  //   icon: <FaUsers />,
+  // },
   {
     label: "Status",
     link: "status",
