@@ -16,9 +16,9 @@ const StatusPage = () => {
       <tr className="text-black dark:text-white  text-left">
         <th className="py-2">Full Name</th>
         <th className="py-2">Title</th>
-        <th className="py-2">Task Progress</th>
-        <th className="py-2">Task Numbers</th>
-        <th className="py-2">Total Task</th>
+        <th className="py-2">Project Progress</th>
+        <th className="py-2">Project Numbers</th>
+        <th className="py-2">Total Project</th>
       </tr>
     </thead>
   );
@@ -73,7 +73,7 @@ const StatusPage = () => {
     <>
       <div className="w-full md:px-1 px-0 mb-6">
         <div className="flex items-center justify-between mb-8">
-          <Title title="User Task Status" />
+          <Title title="User Project Status" />
         </div>
         <div className="bg-white dark:bg-[#1f1f1f] px-2 md:px-4 py-4 shadow-md rounded">
           <div className="overflow-x-auto">
