@@ -135,7 +135,7 @@ const Activities = ({ activity, id, refetch }) => {
           <p className="font-semibold">{item?.by?.name}</p>
           <div className="text-gray-500 space-x-2">
             <span className="capitalize">{item?.type}</span>
-            <span className="text-sm">{moment(item?.date).fromNow()}</span>
+            {/* <span className="text-sm">{moment(item?.date).fromNow()}</span> */}
           </div>
           <div className="text-gray-700">{item?.activity}</div>
         </div>
