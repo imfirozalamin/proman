@@ -142,10 +142,10 @@ const AddTask = ({ open, setOpen, task }) => {
 
           <div className="mt-2 flex flex-col gap-6">
             <Textbox
-              placeholder="Task title"
+              placeholder="Project title"
               type="text"
               name="title"
-              label="Task Title"
+              label="Project Title"
               className="w-full rounded"
               register={register("title", {
                 required: "Title is required!",
@@ -155,7 +155,7 @@ const AddTask = ({ open, setOpen, task }) => {
             {/* <UserList setTeam={setTeam} team={team} /> */}
             <div className="flex gap-4">
               <SelectList
-                label="Task Stage"
+                label="Project Stage"
                 lists={LISTS}
                 selected={stage}
                 setSelected={setStage}
@@ -173,7 +173,7 @@ const AddTask = ({ open, setOpen, task }) => {
                   placeholder="Date"
                   type="date"
                   name="date"
-                  label="Task Date"
+                  label="Deadline"
                   className="w-full rounded"
                   register={register("date", {
                     required: "Date is required!",
@@ -181,7 +181,7 @@ const AddTask = ({ open, setOpen, task }) => {
                   error={errors.date ? errors.date.message : ""}
                 />
               </div>
-              <div className="w-full flex items-center justify-center mt-4">
+              {/* <div className="w-full flex items-center justify-center mt-4">
                 <label
                   className="flex items-center gap-1 text-base text-ascent-2 hover:text-ascent-1 cursor-pointer my-4"
                   htmlFor="imgUpload"
@@ -197,11 +197,11 @@ const AddTask = ({ open, setOpen, task }) => {
                   <BiImages />
                   <span>Add Assets</span>
                 </label>
-              </div>
+              </div> */}
             </div>
 
             <div className="w-full">
-              <p>Task Description</p>
+              <p>Project Description</p>
               <textarea
                 name="description"
                 {...register("description")}

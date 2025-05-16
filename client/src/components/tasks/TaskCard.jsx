@@ -100,7 +100,7 @@ const TaskCard = ({ task }) => {
         ) : (
           <div>
             <div className="py-4 border-t border-gray-200 dark:border-gray-700">
-              <span className="text-gray-500">No Sub-Task</span>
+              <span className="text-gray-500">No Task</span>
             </div>
           </div>
         )}
