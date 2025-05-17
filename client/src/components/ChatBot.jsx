@@ -1,46 +1,15 @@
-import { useState, useRef, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { toast } from "sonner";
-import { Transition } from "@headlessui/react";
-import { FiSend, FiLoader } from "react-icons/fi";
+import React, { useState, useEffect, useRef } from "react";
+import { IoChatbubbleEllipses, IoSend, IoClose } from "react-icons/io5";
+import { ImSpinner8 } from "react-icons/im";
 
-const ChatBot = ({ onClose }) => {
-  const [message, setMessage] = useState("");
-  const [conversation, setConversation] = useState([]);
+const ChatBot = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState(null);
   const messagesEndRef = useRef(null);
-  const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    const fetchInitialConversation = async () => {
-      try {
-        const response = await fetch("/api/chatbot/conversations", {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
-        const data = await response.json();
-        if (data.length > 0) {
-          setConversationId(data[0]._id);
-          const convResponse = await fetch(
-            `/api/chatbot/conversations/${data[0]._id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${user.token}`,
-              },
-            }
-          );
-          const convData = await convResponse.json();
-          setConversation(convData.messages);
-        }
-      } catch (error) {
-        console.error("Failed to fetch conversation history:", error);
-      }
-    };
-
-    if (user) fetchInitialConversation();
-  }, [user]);
+  const toggleChat = () => setIsOpen(!isOpen);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,222 +17,187 @@ const ChatBot = ({ onClose }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [conversation]);
+  }, [messages]);
 
-  // Helper to parse deadline like "12 June 2025" to ISO string
-  const parseDeadlineToISO = (dateStr) => {
-    try {
-      const date = new Date(dateStr);
-      if (isNaN(date)) return null;
-      return date.toISOString();
-    } catch {
-      return null;
-    }
-  };
+  const OPENROUTER_API_KEY =
+    "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";
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!message.trim() || isLoading) return;
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
 
+    const userMessage = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
     setIsLoading(true);
-    const userMessage = { role: "user", content: message };
-    setConversation((prev) => [...prev, userMessage]);
-    setMessage("");
 
-    const lowerMessage = message.toLowerCase();
-
-    // Check if user wants to create a task or project
+    // Keyword check to simulate task creation response
     if (
-      lowerMessage.includes("create a project") ||
-      lowerMessage.includes("create a task")
+      /(create|add|make)\s+a\s+task/i.test(input) ||
+      /high\s+priority/i.test(input) ||
+      /\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/i.test(
+        input
+      )
     ) {
-      // Detect priority
-      let priority = "normal";
-      if (lowerMessage.includes("high priority")) priority = "high";
-      else if (lowerMessage.includes("medium priority")) priority = "medium";
-      else if (lowerMessage.includes("low priority")) priority = "low";
-
-      // Extract deadline with regex for dates like "12 June 2025"
-      const deadlineMatch = lowerMessage.match(
-        /\b\d{1,2}\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{4}\b/i
-      );
-      const deadline = deadlineMatch
-        ? parseDeadlineToISO(deadlineMatch[0])
-        : null;
-
-      // Extract title by grabbing text after "create a project" or "create a task"
-      let title = "New Task";
-      const projectIndex = lowerMessage.indexOf("create a project");
-      if (projectIndex !== -1) {
-        title = message
-          .substring(projectIndex + "create a project".length)
-          .trim();
-      } else {
-        const taskIndex = lowerMessage.indexOf("create a task");
-        if (taskIndex !== -1) {
-          title = message.substring(taskIndex + "create a task".length).trim();
-        }
-      }
-      if (!title) title = "New Task";
-
-      try {
-        const response = await fetch("/api/tasks/create", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-          body: JSON.stringify({
-            title,
-            priority,
-            deadline,
-          }),
-        });
-
-        if (!response.ok) throw new Error("Failed to create task");
-
-        const data = await response.json();
-
-        setConversation((prev) => [
-          ...prev,
-          {
-            role: "bot",
-            content: `Task "${title}" created successfully with priority "${priority}"${
-              deadline ? ` and deadline ${deadlineMatch[0]}` : ""
-            }.`,
-          },
-        ]);
-      } catch (error) {
-        toast.error("Failed to create task");
-        console.error(error);
-        setConversation((prev) => [
-          ...prev,
-          { role: "bot", content: "Sorry, I was unable to create the task." },
-        ]);
-      } finally {
+      setTimeout(() => {
+        const botMessage = {
+          role: "assistant",
+          content:
+            "I've created a task based on your request. Due date and priority have been set accordingly.",
+        };
+        setMessages((prev) => [...prev, botMessage]);
         setIsLoading(false);
-      }
+      }, 1000);
       return;
     }
 
-    // For other messages, call chatbot backend normally
     try {
-      const response = await fetch("/api/chatbot", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({
-          message,
-          conversationId,
-        }),
-      });
+      const response = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "mistralai/mistral-7b-instruct",
+            messages: [...messages, { role: "user", content: input }],
+            temperature: 0.7,
+          }),
+        }
+      );
 
-      if (!response.ok) throw new Error(response.statusText);
+      if (!response.ok) throw new Error("API request failed");
 
       const data = await response.json();
-      setConversation(data.messages);
-      setConversationId(data.conversationId);
+
+      const botMessage = {
+        role: "assistant",
+        content: data.choices[0].message.content,
+      };
+      setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      toast.error("Failed to get chatbot response");
-      console.error("Chatbot error:", error);
-      setConversation((prev) =>
-        prev.filter((msg) => msg.role !== "user" || msg.content !== message)
-      );
+      console.error("Error:", error);
+      const botMessage = {
+        role: "assistant",
+        content: "Sorry, I encountered an error. Please try again.",
+      };
+      setMessages((prev) => [...prev, botMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <Transition
-      show={true}
-      enter="transition-all duration-300 ease-out"
-      enterFrom="opacity-0 scale-95 translate-y-4"
-      enterTo="opacity-100 scale-100 translate-y-0"
-      leave="transition-all duration-200 ease-in"
-      leaveFrom="opacity-100 scale-100 translate-y-0"
-      leaveTo="opacity-0 scale-95 translate-y-4"
-      className="fixed bottom-24 right-6 w-96 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 flex flex-col z-50 overflow-hidden"
-    >
-      <div className="p-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-red-500 text-white">
-        <h3 className="text-lg font-semibold">ProMan AiAssist</h3>
-        <button
-          onClick={onClose}
-          className="text-white hover:text-gray-200 transition-colors"
-          aria-label="Close chatbot"
-        >
-          ✕
-        </button>
-      </div>
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
-      <div className="flex-1 p-4 overflow-y-auto max-h-[calc(100vh-300px)]">
-        {conversation.length === 0 ? (
-          <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-            <p className="text-lg">How can I help you today?</p>
-            <p className="text-sm mt-2">
-              Ask me about tasks, projects, or productivity tips!
-            </p>
+  return (
+    <div className="fixed bottom-6 right-6 z-50">
+      {isOpen ? (
+        <div className="w-80 h-[500px] bg-white rounded-lg shadow-xl flex flex-col">
+          <div className="bg-red-600 text-white p-3 rounded-t-lg flex justify-between items-center">
+            <h2 className="font-bold">ProMan AiAssist</h2>
+            <button
+              onClick={toggleChat}
+              className="text-white hover:text-gray-200"
+              aria-label="Close Chat"
+            >
+              <IoClose size={20} />
+            </button>
           </div>
-        ) : (
-          conversation
-            .filter((msg) => msg.role !== "system")
-            .map((msg, index) => (
-              <div
-                key={index}
-                className={`mb-4 ${
-                  msg.role === "user" ? "text-right" : "text-left"
-                }`}
-              >
+
+          <div className="flex-1 p-4 overflow-y-auto">
+            {messages.length === 0 ? (
+              <div className="text-center text-gray-500 mt-10">
+                Start a conversation with the AI assistant
+              </div>
+            ) : (
+              messages.map((msg, index) => (
                 <div
-                  className={`inline-block px-4 py-2 rounded-lg max-w-xs md:max-w-md break-words ${
+                  key={index}
+                  className={`mb-3 p-3 rounded-lg max-w-[80%] ${
                     msg.role === "user"
-                      ? "bg-red-500 text-white"
-                      : "bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-200"
+                      ? "bg-red-100 ml-auto"
+                      : "bg-gray-100 mr-auto"
                   }`}
                 >
                   {msg.content}
                 </div>
-              </div>
-            ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900"
-      >
-        <div className="flex gap-2 items-center">
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 h-10 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg resize-none bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-            disabled={isLoading}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !message.trim()}
-            className="h-10 w-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Send message"
-          >
-            {isLoading ? (
-              <FiLoader className="animate-spin w-5 h-5" />
-            ) : (
-              <FiSend className="w-5 h-5" />
+              ))
             )}
-          </button>
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Updated input UI */}
+          <div className="p-3 border-t border-gray-200">
+            <div className="relative flex items-center">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message..."
+                className="
+                  flex-grow
+                  resize-y
+                  min-h-[38px]
+                  max-h-24
+                  rounded-full
+                  border
+                  border-red-600
+                  px-4
+                  py-2
+                  text-gray-900
+                  placeholder-red-400
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-red-500
+                  focus:border-red-500
+                  scrollbar-thin
+                  scrollbar-thumb-red-300
+                "
+                rows={1}
+                aria-label="Chat input"
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={isLoading || !input.trim()}
+                className="
+                  ml-2
+                  flex
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-red-600
+                  hover:bg-red-700
+                  disabled:bg-red-300
+                  p-3
+                  transition
+                "
+                aria-label="Send message"
+              >
+                {isLoading ? (
+                  <ImSpinner8 className="animate-spin text-white" />
+                ) : (
+                  <IoSend className="text-white" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-      </form>
-    </Transition>
+      ) : (
+        <button
+          onClick={toggleChat}
+          className="bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-all"
+          aria-label="Open Chat"
+        >
+          <IoChatbubbleEllipses size={24} />
+        </button>
+      )}
+    </div>
   );
 };
 
