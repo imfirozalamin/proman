@@ -175,9 +175,9 @@ const Dashboard = () => {
                     </span>
                   </div>
                   <div className="text-sm text-gray-600 mb-2">
-                    Deadline: {moment(project.deadline).format("MMM D, YYYY")}
+                    Deadline: {moment(project.date).format("MMM D, YYYY")}
                     <span className="ml-2 text-red-500 font-medium">
-                      ({formatRemainingTime(project.deadline)})
+                      ({formatRemainingTime(project.date)})
                     </span>
                   </div>
                   <div className="flex items-center mt-2">
