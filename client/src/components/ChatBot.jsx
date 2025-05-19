@@ -20,7 +20,7 @@ const ChatBot = () => {
   }, [messages]);
 
   const OPENROUTER_API_KEY =
-    "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";
+    "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";
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
