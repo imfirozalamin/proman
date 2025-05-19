@@ -15,6 +15,7 @@ import Title from "./Title";
 import UserAvatar from "./UserAvatar";
 import UserInfo from "./UserInfo";
 import ChatbotToggle from "./ChatbotToggle";
+import RecommendedSection from "./RecommendedSection";
 
 export {
   AddUser,
@@ -35,4 +36,5 @@ export {
   UserAvatar,
   UserInfo,
   ChatbotToggle,
+  RecommendedSection,
 };
