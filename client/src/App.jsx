@@ -4,7 +4,7 @@ import { IoMdClose } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
-import { Navbar, Sidebar, ChatbotToggle } from "./components";
+import { Navbar, Sidebar } from "./components";
 
 import {
   Dashboard,
@@ -38,8 +38,7 @@ function Layout() {
         </div>
       </div>
 
-      {/* Add Chatbot Toggle for authenticated users */}
-      <ChatbotToggle />
+      {/* <ChatbotToggle /> */}
     </div>
   ) : (
     <Navigate to="/log-in" state={{ from: location }} replace />
