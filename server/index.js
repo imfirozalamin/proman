@@ -16,7 +16,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Database Connection (with explicit local URI fallback)
-const localMongoURI = process.env.MONGO_URI; // Fallback for local DB
+const localMongoURI = 'mongodb://localhost:27017'
 const MONGO_URI = process.env.MONGO_URI || localMongoURI; // Use .env or fallback to local
 
 // Connect to MongoDB
