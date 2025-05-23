@@ -12,12 +12,16 @@ import {
   markNotificationRead,
   registerUser,
   updateUserProfile,
+  verifyOTP,
+  resendOTP,
 } from "../controllers/userController.js";
 
 const router = express.Router();
 
 // Public routes
 router.post("/register", registerUser);
+router.post("/verify-otp", verifyOTP);
+router.post("/resend-otp", resendOTP);
 router.post("/login", loginUser);
 router.post("/logout", protectRoute, logoutUser);
 

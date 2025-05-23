@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
 import Notice from "../models/notis.js";
 import User from "../models/userModel.js";
+import { generateOTP, sendVerificationEmail } from "../config/emailConfig.js";
 
 // Generate JWT Token
 const generateToken = (userId) => {
@@ -26,6 +27,13 @@ const loginUser = asyncHandler(async (req, res) => {
     return res.status(401).json({
       status: false,
       message: "User account has been deactivated, contact the administrator",
+    });
+  }
+
+  if (!user.isVerified) {
+    return res.status(401).json({
+      status: false,
+      message: "Please verify your email address first"
     });
   }
 
@@ -58,6 +66,9 @@ const registerUser = asyncHandler(async (req, res) => {
       .json({ status: false, message: "Email address already exists" });
   }
 
+  const otp = generateOTP();
+  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
   const user = await User.create({
     name,
     email,
@@ -65,21 +76,124 @@ const registerUser = asyncHandler(async (req, res) => {
     isAdmin,
     role,
     title,
+    otp,
+    otpExpiry,
+    isVerified: false
   });
 
   if (user) {
-    const token = isAdmin ? generateToken(user._id) : null;
-    user.password = undefined;
+    const emailSent = await sendVerificationEmail(email, otp);
+    
+    if (!emailSent) {
+      await User.findByIdAndDelete(user._id);
+      return res.status(500).json({ 
+        status: false, 
+        message: "Failed to send verification email. Please try again." 
+      });
+    }
 
     res.status(201).json({
-      ...user.toJSON(),
-      token
+      status: true,
+      message: "Registration successful. Please check your email for OTP verification.",
+      userId: user._id
     });
   } else {
     return res
       .status(400)
       .json({ status: false, message: "Invalid user data" });
   }
+});
+
+// POST - Verify OTP
+const verifyOTP = asyncHandler(async (req, res) => {
+  const { userId, otp } = req.body;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({ 
+      status: false, 
+      message: "User not found" 
+    });
+  }
+
+  if (user.isVerified) {
+    return res.status(400).json({ 
+      status: false, 
+      message: "Email already verified" 
+    });
+  }
+
+  if (user.otp !== otp) {
+    return res.status(400).json({ 
+      status: false, 
+      message: "Invalid OTP" 
+    });
+  }
+
+  if (new Date() > user.otpExpiry) {
+    return res.status(400).json({ 
+      status: false, 
+      message: "OTP has expired" 
+    });
+  }
+
+  user.isVerified = true;
+  user.otp = undefined;
+  user.otpExpiry = undefined;
+  await user.save();
+
+  const token = generateToken(user._id);
+  user.password = undefined;
+
+  res.status(200).json({
+    status: true,
+    message: "Email verified successfully",
+    ...user.toJSON(),
+    token
+  });
+});
+
+// POST - Resend OTP
+const resendOTP = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({ 
+      status: false, 
+      message: "User not found" 
+    });
+  }
+
+  if (user.isVerified) {
+    return res.status(400).json({ 
+      status: false, 
+      message: "Email already verified" 
+    });
+  }
+
+  const otp = generateOTP();
+  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+  user.otp = otp;
+  user.otpExpiry = otpExpiry;
+  await user.save();
+
+  const emailSent = await sendVerificationEmail(user.email, otp);
+
+  if (!emailSent) {
+    return res.status(500).json({ 
+      status: false, 
+      message: "Failed to send verification email. Please try again." 
+    });
+  }
+
+  res.status(200).json({
+    status: true,
+    message: "OTP resent successfully. Please check your email."
+  });
 });
 
 // POST -  Logout user
@@ -292,4 +406,6 @@ export {
   markNotificationRead,
   registerUser,
   updateUserProfile,
+  verifyOTP,
+  resendOTP,
 };

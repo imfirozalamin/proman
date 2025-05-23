@@ -64,8 +64,38 @@ export const authApiSlice = apiSlice.injectEndpoints({
         dispatch(logoutAction());
       },
     }),
+    verifyOTP: builder.mutation({
+      query: (data) => ({
+        url: `${USERS_URL}/verify-otp`,
+        method: "POST",
+        body: data,
+      }),
+      // Store token in localStorage after successful verification
+      onQueryStarted: async (_, { queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.token) {
+            localStorage.setItem('token', data.token);
+          }
+        } catch (err) {
+          console.error('Error storing token:', err);
+        }
+      },
+    }),
+    resendOTP: builder.mutation({
+      query: (data) => ({
+        url: `${USERS_URL}/resend-otp`,
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useLogoutMutation } =
-  authApiSlice;
+export const {
+  useLoginMutation,
+  useLogoutMutation,
+  useRegisterMutation,
+  useVerifyOTPMutation,
+  useResendOTPMutation,
+} = authApiSlice;
