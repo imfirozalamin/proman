@@ -7,8 +7,6 @@ import Trash from "./Trash";
 import Users from "./Users";
 import StatusPage from "./Status";
 import Project from "./Project";
-import Verify from "./Verify";
-import OTPLogin from "./OTPLogin";
 
 export {
   Dashboard,
@@ -20,6 +18,4 @@ export {
   Users,
   StatusPage,
   Project,
-  Verify,
-  OTPLogin,
 };
