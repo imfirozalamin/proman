@@ -70,7 +70,7 @@ const AddUser = ({ open, setOpen, userData }) => {
               })}
               error={errors.name ? errors.name.message : ""}
             />
-            <Textbox
+            {/* <Textbox
               placeholder="Title"
               type="text"
               name="title"
@@ -80,7 +80,7 @@ const AddUser = ({ open, setOpen, userData }) => {
                 required: "Title is required!",
               })}
               error={errors.title ? errors.title.message : ""}
-            />
+            /> */}
             <Textbox
               placeholder="Email Address"
               type="email"
@@ -93,7 +93,7 @@ const AddUser = ({ open, setOpen, userData }) => {
               error={errors.email ? errors.email.message : ""}
             />
 
-            <Textbox
+            {/* <Textbox
               placeholder="Role"
               type="text"
               name="role"
@@ -103,7 +103,7 @@ const AddUser = ({ open, setOpen, userData }) => {
                 required: "User role is required!",
               })}
               error={errors.role ? errors.role.message : ""}
-            />
+            /> */}
           </div>
 
           {isLoading || isUpdating ? (

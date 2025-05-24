@@ -6,23 +6,19 @@ import morgan from "morgan";
 import { errorHandler, routeNotFound } from "./middleware/errorMiddleware.js";
 import routes from "./routes/index.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
-import { connectDB } from "./utils/connectDB.js"; // Ensure this is the correct import path
+import { connectDB } from "./utils/connectDB.js";
 
-// Load environment variables first
 dotenv.config();
 
-// Initialize Express app
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Database Connection (with explicit local URI fallback)
-const localMongoURI = 'mongodb://localhost:27017'
-const MONGO_URI = process.env.MONGO_URI || localMongoURI; // Use .env or fallback to local
+const localMongoURI = "mongodb://localhost:27017";
+const MONGO_URI = process.env.MONGO_URI || localMongoURI;
 
-// Connect to MongoDB
 connectDB(MONGO_URI).catch((err) => {
   console.error("❌ MongoDB connection failed:", err.message);
-  process.exit(1); // Exit if DB connection fails
+  process.exit(1);
 });
 
 // Middleware

@@ -18,7 +18,7 @@ import {
 
 const router = express.Router();
 
-// Public routes
+
 router.post("/register", registerUser);
 router.post("/verify-otp", verifyOTP);
 router.post("/resend-otp", resendOTP);
@@ -33,7 +33,7 @@ router.put("/profile", protectRoute, updateUserProfile);
 router.put("/read-noti", protectRoute, markNotificationRead);
 router.put("/change-password", protectRoute, changeUserPassword);
 
-//   FOR ADMIN ONLY - ADMIN ROUTES
+
 router
   .route("/:id")
   .put(protectRoute, activateUserProfile)
